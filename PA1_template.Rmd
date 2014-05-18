@@ -1,20 +1,88 @@
 # Reproducible Research: Peer Assessment 1
 
-
 ## Loading and preprocessing the data
 
+```{r,echo=TRUE}
+data <- read.csv("activity.csv", header=TRUE)
+data$steps <- as.numeric(data$steps) # Convert the column to numeric
+
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r,echo=TRUE}
+library(plyr)
+steps_day <- ddply(data, .(date), summarize, steps = sum(steps)) # Getting the total number of steps per day
 
+steps_day_1 <- steps_day[complete.cases(steps_day$steps),] # Removing the NAs from the constructed data frame
 
+hist(steps_day_1$steps,xlab="Total Number of steps per day",main="Histogram of total number of steps per day")
+
+mean(steps_day_1$steps) # Getting the mean of the total steps per day
+
+median(steps_day_1$steps) #getting the median for the total steps per day
+
+```
 
 ## What is the average daily activity pattern?
+```{r, echo=TRUE}
+data1 <- data[complete.cases(data$steps),]
+steps_day_ave <- ddply(data1, .(interval), summarize, steps = mean(steps))# Getting the total number of steps per day
+plot(steps_day_ave$interval, steps_day_ave$steps, type = "l", xlab = "5-minute interval", ylab = "average number of steps taken")
 
-
+##Time interval with the max number of steps
+interval <- steps_day_ave[steps_day_ave$step == max(steps_day_ave$steps),1]
+interval
+```
 
 ## Imputing missing values
+```{r, echo=TRUE}
+data_complete_rows <- complete.cases(data)
+number_incomplete_rows <- table(data_complete_rows)[1]
+number_incomplete_rows
 
+data_2 <- data
+data_2 <- merge(data,steps_day_ave,by="interval")
+data_2$steps.x[is.na(data_2$steps.x)] <- data_2$steps.y[is.na(data_2$steps.x)]
+data_2$steps.y <- NULL
+data_2$steps <- data_2$steps.x
+data_2$steps.x <- NULL
 
+steps_day_sum <- ddply(data_2, .(interval), summarize, steps = sum(steps))# Getting the total number of steps per day
+hist(steps_day_sum$steps, xlab = "total number of steps per day", main="Total number of steps taken each day")
+
+mean_total_number_steps_taken_per_day <- ddply(data_2, .(date), summarize, steps = mean(steps))#
+mean_total_number_steps_taken_per_day
+median_total_number_steps_taken_per_day <- ddply(data_2, .(date), summarize, steps = median(steps))#
+median_total_number_steps_taken_per_day
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r,echo=TRUE}
+data_3 <- data_2
+data_3$date <- as.Date(data_3$date)
+weekdays <- weekdays(data_3$date)
+data_3$weekdays <- (weekdays == "Sunday") | (weekdays == "Saturday")
+data_3$weekdays[data_3$weekdays == TRUE] <- "weekend"
+data_3$weekdays[data_3$weekdays == FALSE] <- "weekday"
+data_3$weekdays <- as.factor(data_3$weekdays)
+
+weekdays_dataframe <- data_3[data_3$weekdays == "weekday",]
+weekends_dataframe <- data_3[data_3$weekdays == "weekend",]
+
+mean_total_number_steps_taken_weekdays <- ddply(weekdays_dataframe, .(interval), summarize, steps = mean(steps))#
+
+mean_total_number_steps_taken_weekdays <- cbind(mean_total_number_steps_taken_weekdays,weekdays="weekday")
+
+mean_total_number_steps_taken_weekends <- ddply(weekends_dataframe, .(interval), summarize, steps = mean(steps))#
+
+mean_total_number_steps_taken_weekends <- cbind(mean_total_number_steps_taken_weekends,weekdays="weekend")
+
+data_4 <- rbind(mean_total_number_steps_taken_weekdays,mean_total_number_steps_taken_weekends)
+
+library(lattice)
+
+xyplot(steps ~ interval | weekdays, data = data_4,layout=c(1,2),type = "l")
+
+```
