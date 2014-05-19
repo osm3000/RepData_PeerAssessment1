@@ -36,6 +36,7 @@ interval
 ```
 
 ## Imputing missing values
+### For the NA replacement strategy, I'll use the mean of the 5-min interval to replace different NAs existing in the data
 ```{r, echo=TRUE}
 data_complete_rows <- complete.cases(data)
 number_incomplete_rows <- table(data_complete_rows)[1]
