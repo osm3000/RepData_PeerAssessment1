@@ -5,17 +5,6 @@
 
 ```r
 data <- read.csv("activity.csv", header = TRUE)
-```
-
-```
-## Warning: cannot open file 'activity.csv': No such file or directory
-```
-
-```
-## Error: cannot open the connection
-```
-
-```r
 data$steps <- as.numeric(data$steps)  # Convert the column to numeric
 ```
 
@@ -84,6 +73,7 @@ interval
 
 
 ## Imputing missing values
+### For the NA replacement strategy, I'll use the mean of the 5-min interval to replace different NAs existing in the data
 
 ```r
 data_complete_rows <- complete.cases(data)
